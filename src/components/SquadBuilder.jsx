@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
+import TroopInputs from './TroopInputs';
+import MarchSizeInputs from './MarchSizeInputs';
+import RallyCallerInput from './RallyCallerInput';
+import SquadTable from './SquadTable';
+import TroopTotals from './TroopTotals';
+import RatioInputs from './RatioInputs';
+import RallyCallerCalculator from './RallyCallerCalculator';
 
 const SquadBuilder = () => {
     const [totalTroops, setTotalTroops] = useState({
-        infantry: 338682,
-        lancer: 374057,
-        marksman: 447556,
+        infantry: [{ level: 1, count: 338682 }],
+        lancer: [{ level: 1, count: 374057 }],
+        marksman: [{ level: 1, count: 447556 }],
     });
     const [desiredRatio, setDesiredRatio] = useState({
         infantry: 0.1,
@@ -18,22 +25,21 @@ const SquadBuilder = () => {
     });
 
     const [numSquads, setNumSquads] = useState(6);
-    const [marchSizes, setMarchSizes] = useState(Array(numSquads).fill(135410)); // Initial value.
+    const [marchSizes, setMarchSizes] = useState(Array(numSquads).fill(135410));
     const [squads, setSquads] = useState([]);
     const [error, setError] = useState('');
     const [isRallyCaller, setIsRallyCaller] = useState(true);
     const [totalRequiredTroops, setTotalRequiredTroops] = useState(0);
     const [additionalTroopsRequired, setAdditionalTroopsRequired] = useState({});
-    const [adjustedRatios, setAdjustedRatios] = useState({}); // Store adjusted ratios
 
-    const handleTroopChange = (type, value) => {
-        setTotalTroops({ ...totalTroops, [type]: parseInt(value) || 0 });
+    const handleTroopChange = (type, newTroopLevels) => {
+        setTotalTroops({ ...totalTroops, [type]: newTroopLevels });
     };
 
     const handleRatioChange = (type, value) => {
         const ratio = parseFloat(value);
         if (isNaN(ratio) || ratio < 0 || ratio > 1) {
-            setError(`Invalid ratio for ${type}.  Must be between 0 and 1`);
+            setError(`Invalid ratio for ${type}. Must be between 0 and 1`);
             return;
         }
         setDesiredRatio({ ...desiredRatio, [type]: ratio });
@@ -102,7 +108,7 @@ const SquadBuilder = () => {
     const handleRallyCallerChange = (event) => {
         const isChecked = event.target.checked;
         setIsRallyCaller(isChecked);
-        setMarchSizes(prevSizes => {
+         setMarchSizes(prevSizes => {
             const newSizes = [...prevSizes];
               if (isChecked) {
                 // Add a new march size at the beginning.
@@ -120,15 +126,6 @@ const SquadBuilder = () => {
     const calculateSquads = () => {
         setError('');
         setSquads([]);
-        setAdjustedRatios({}); // Reset adjusted ratios
-
-        console.log("--- Starting Calculation ---");
-        console.log("Initial Total Troops:", totalTroops);
-        console.log("Desired Ratios:", desiredRatio);
-        console.log("Sequence:", sequence);
-        console.log("Number of Squads:", numSquads);
-        console.log("March Sizes:", marchSizes);
-        console.log("Is Rally Caller:", isRallyCaller);
 
         // --- 1. Input Validation ---
         const totalRatio = Object.values(desiredRatio).reduce((sum, r) => sum + r, 0);
@@ -148,107 +145,113 @@ const SquadBuilder = () => {
         }
 
         const calculatedSquads = [];
-        let remainingTroops = { ...totalTroops };
+       // Create a copy of totalTroops to work with
+        let remainingTroops = {};
+        for (const type in totalTroops) {
+            remainingTroops[type] = [...totalTroops[type].map(level => ({ ...level }))];
+        }
 
         // --- 2. Rally Caller Squad (Conditional) ---
         let rallyCallerIndex = -1;
         if (isRallyCaller) {
             rallyCallerIndex = 0;
             const rallyCallerSquad = {};
-            for (const type in totalTroops) {
-                rallyCallerSquad[type] = Math.floor(marchSizes[0] * desiredRatio[type]);
-                remainingTroops[type] -= rallyCallerSquad[type];
-                if (remainingTroops[type] < 0) {
-                    setError(`Not enough ${type} troops for the Rally Caller squad.`);
-                    return;
+            for (const type in remainingTroops) {
+                rallyCallerSquad[type] = 0; // Initialize
+                let troopsToAllocate = Math.floor(marchSizes[0] * desiredRatio[type]);
+                 // Sort troop levels by sequence (higher levels first, based on sequence object)
+                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => sequence[type] - sequence[type]);
+
+                for (const levelData of sortedTroopLevels) {
+                    const troopsToUse = Math.min(troopsToAllocate, levelData.count);
+                    rallyCallerSquad[type] += troopsToUse;
+                    troopsToAllocate -= troopsToUse;
+                    levelData.count -= troopsToUse; // Deduct from the copied remainingTroops
+                    if (troopsToAllocate <= 0) break;
                 }
+                  if (troopsToAllocate > 0) {
+                        setError(`Not enough ${type} troops for the Rally Caller squad.`);
+                        return; // Stop if not enough troops.
+                    }
             }
+
             calculatedSquads.push(rallyCallerSquad);
-            console.log("Rally Caller Squad:", rallyCallerSquad);
         }
 
-        console.log("Remaining Troops (after Rally Caller):", remainingTroops);
-
-
-        // --- 3. Adjusted Ratio Calculation (Corrected *Again*) ---
-
-        // Calculate total march size *excluding* the rally caller's march size.
+        // --- 3. Adjusted Ratio Calculation (Corrected) ---
         let totalMarchSize = 0;
-        const startIndex = isRallyCaller ? 1 : 0;  // Start at index 1 if rally, 0 if not.
-
+        const startIndex = isRallyCaller ? 1 : 0;
         for (let i = startIndex; i < marchSizes.length; i++) {
             totalMarchSize += marchSizes[i];
         }
 
-        console.log("Total March Size (excluding Rally Caller):", totalMarchSize);
-
-
         const sortedSequence = Object.entries(sequence).sort(([, a], [, b]) => a - b);
         const adjRatio = {};
-        let remainingMarchCapacity = totalMarchSize; // CORRECTED VARIABLE NAME
-        let localRemainingTroops = { ...remainingTroops }; //copy for local calculations.
-
-        // *Precise* Adjusted Ratio Calculation (following spreadsheet logic)
-         for (const [troopType] of sortedSequence) {
-            adjRatio[troopType] = 0; // Initialize
-         }
+         // Initialize adjRatio for all troop types
+        for (const type in totalTroops) {
+            adjRatio[type] = 0;
+        }
+        let remainingMarchCapacity = totalMarchSize;
+       //Create local copy for calculations.
+         let localRemainingTroops = {};
+        for (const type in remainingTroops) {
+            localRemainingTroops[type] = remainingTroops[type].reduce((sum, level) => sum + level.count, 0);
+        }
 
         // *** CORRECTED ADJUSTED RATIO LOGIC ***
         for (const [troopType, seqValue] of sortedSequence) {
-            console.log(`Calculating Adjusted Ratio for: ${troopType} (Sequence: ${seqValue})`);
-
-            // Calculate allocated troops (analogous to MIN)
             let allocated = Math.min(localRemainingTroops[troopType], remainingMarchCapacity);
+            adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0; // Avoid division by zero.
 
-            // Calculate the adjusted ratio
-            adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0;  // Avoid division by zero
-            console.log(`allocated ${allocated}`);
-            // Update remaining troops and capacity
-            remainingMarchCapacity -= allocated;
-            localRemainingTroops[troopType] -= allocated;
-
-            console.log(`  Adjusted Ratio[${troopType}]: ${adjRatio[troopType]}`);
-            console.log(`  Remaining March Capacity: ${remainingMarchCapacity}`);
-            console.log(`  Local Remaining Troops:`, localRemainingTroops);
+            remainingMarchCapacity -= allocated; //update remaining capacity
+            localRemainingTroops[troopType] -= allocated; //update local remaining troops.
         }
-        setAdjustedRatios(adjRatio); // Store for display
-        console.log("Final Adjusted Ratios:", adjRatio);
+
 
         // --- 4. Build the User-Defined Squads ---
-         for (let i = startIndex; i < numSquads + startIndex; i++) { // Iterate through user squads
+        for (let i = startIndex; i < numSquads + startIndex; i++) {
             const squad = {};
-            console.log(`Calculating Squad ${i + 1}:`)
-            for (const type in totalTroops) {
-                squad[type] = Math.floor(marchSizes[i] * adjRatio[type]);
-                squad[type] = Math.min(squad[type], remainingTroops[type]);  // Don't exceed available.
-                remainingTroops[type] -= squad[type]; // Deduct troops.
-                console.log(`  ${type}: ${squad[type]}`);
+            for (const type in remainingTroops) {
+                squad[type] = 0;
+                let troopsToAllocate = Math.floor(marchSizes[i] * adjRatio[type]);
 
+                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => sequence[type] - sequence[type]);
+                for (const levelData of sortedTroopLevels) {
+                    const troopsToUse = Math.min(troopsToAllocate, levelData.count);
+                    squad[type] += troopsToUse;
+                    troopsToAllocate -= troopsToUse;
+                    levelData.count -= troopsToUse;
+                    if (troopsToAllocate <= 0) break; // Optimization
+                }
             }
             calculatedSquads.push(squad);
         }
 
 
-        setSquads(calculatedSquads);
-
         // --- 5. Calculate Total Required and Additional Troops ---
         let totalRequired = 0;
-
-         for (let i = startIndex; i < marchSizes.length; i++) {
+        for (let i = startIndex; i < marchSizes.length; i++) {
             totalRequired += marchSizes[i];
-         }
+        }
         setTotalRequiredTroops(totalRequired);
 
-         const additionalRequired = {};
-        for (const type in totalTroops) {
+        const additionalRequired = {};
+         for (const type in totalTroops) {
+            additionalRequired[type] = [];
              let requiredForSquads = 0;
-            for (const squad of calculatedSquads) {
+            for(let squad of calculatedSquads){
                 requiredForSquads += squad[type];
             }
-             additionalRequired[type] = Math.max(0, requiredForSquads - totalTroops[type]);
-         }
+
+            let remainingTypeTroops = totalTroops[type].reduce((sum, level) => sum + level.count, 0);
+
+            if (requiredForSquads > remainingTypeTroops) {
+                additionalRequired[type] = requiredForSquads - remainingTypeTroops
+            } else {
+                additionalRequired[type] = 0;
+            }
+        }
         setAdditionalTroopsRequired(additionalRequired);
-        console.log("--- Calculation Complete ---")
     };
 
 
@@ -259,147 +262,43 @@ const SquadBuilder = () => {
             {error && <div className="error">{error}</div>}
             <div className="input-section">
                 <h3>Inputs</h3>
-                <div>
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={isRallyCaller}
-                            onChange={handleRallyCallerChange}
-                        />
-                        Rally Caller
-                    </label>
-                </div>
-                <div>
-                    <label>Number of Squads:</label>
-                    <input
-                        type="number"
-                        value={numSquads}
-                        onChange={(e) => handleNumSquadsChange(e.target.value)}
-                        min="1"
-                    />
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Troop Type</th>
-                            <th>Total Troops</th>
-                            <th>Desired Ratio</th>
-                            <th>Sequence</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.keys(totalTroops).map((type) => (
-                            <tr key={type}>
-                                <td>{type.charAt(0).toUpperCase() + type.slice(1)}</td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        value={totalTroops[type]}
-                                        onChange={(e) => handleTroopChange(type, e.target.value)}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={desiredRatio[type]}
-                                        onChange={(e) => handleRatioChange(type, e.target.value)}
-                                        min="0"
-                                        max="1"
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        value={sequence[type]}
-                                        onChange={(e) => handleSequenceChange(type, e.target.value)}
-                                        min="1"
-                                    />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <h3>March Sizes</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Squad</th>
-                            <th>March Size</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {marchSizes.slice(0, isRallyCaller ? numSquads + 1 : numSquads).map((size, index) => {
-                            let label = `Squad ${index + 1}`;
-                             if (isRallyCaller && index === 0) {
-                                label = "Squad 1 (Rally Caller)";
-                            } else if (isRallyCaller) {
-                                label = `Squad ${index}`;//offset the index.
-                            }
-                            return (
-                                <tr key={index}>
-                                    <td>{label}</td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            value={size}
-                                            onChange={(e) => handleMarchSizeChange(index, e.target.value)}
-                                        />
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                <RallyCallerInput isRallyCaller={isRallyCaller} onRallyCallerChange={handleRallyCallerChange} />
+                <MarchSizeInputs
+                    numSquads={numSquads}
+                    marchSizes={marchSizes}
+                    isRallyCaller={isRallyCaller}
+                    onNumSquadsChange={handleNumSquadsChange}
+                    onMarchSizeChange={handleMarchSizeChange}
+                />
+                <RatioInputs desiredRatio={desiredRatio} onRatioChange={handleRatioChange} />
+                <TroopInputs
+                    totalTroops={totalTroops}
+                    sequence={sequence}
+                    onTroopChange={handleTroopChange}
+                    onSequenceChange={handleSequenceChange}
+                />
+
 
                 <button onClick={calculateSquads}>Calculate Squads</button>
             </div>
 
             <div className="results-section">
-            <h3>Adjusted Ratios</h3>
+                <h3>Adjusted Ratios</h3>
                 <p>
-                    Infantry: {adjustedRatios.infantry?.toFixed(4) || 0},&nbsp;
-                    Lancer: {adjustedRatios.lancer?.toFixed(4) || 0},&nbsp;
-                    Marksman: {adjustedRatios.marksman?.toFixed(4) || 0}
+                    Infantry: {adjRatio.infantry?.toFixed(4) || 0},&nbsp;
+                    Lancer: {adjRatio.lancer?.toFixed(4) || 0},&nbsp;
+                    Marksman: {adjRatio.marksman?.toFixed(4) || 0}
                 </p>
-            <h3>Squads</h3>
-                {squads.length > 0 && (
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Squad</th>
-                                <th>Infantry</th>
-                                <th>Lancer</th>
-                                <th>Marksman</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                           {squads.map((squad, index) => {
-                                let label = `Squad ${index + 1}`;
-                                if (isRallyCaller && index === 0) {
-                                    label = "Squad 1 (Rally Caller)";
-                                }
-                                 else if (isRallyCaller) {
-                                     label = `Squad ${index}`; //offset index
-                                }
-                                return(
-                                <tr key={index}>
-                                    <td>{label}</td>
-                                    <td>{squad.infantry}</td>
-                                    <td>{squad.lancer}</td>
-                                    <td>{squad.marksman}</td>
-                                </tr>
-                            )})}
-                        </tbody>
-                    </table>
+                {isRallyCaller && (
+                    <RallyCallerCalculator
+                        marchSize={marchSizes[0]}
+                        desiredRatio={desiredRatio}
+                        totalTroops={totalTroops}
+                        sequence={sequence}
+                    />
                 )}
-                <h3>Troop Totals</h3>
-                 <p>Total Required Troops: {totalRequiredTroops}</p>
-                {
-                    Object.keys(additionalTroopsRequired).map(troop => (
-                        <p key={troop}> Additional {troop}: {additionalTroopsRequired[troop]}</p>
-                    ))
-                }
+                <SquadTable squads={squads} isRallyCaller={isRallyCaller}/>
+                <TroopTotals totalRequiredTroops={totalRequiredTroops} additionalTroopsRequired={additionalTroopsRequired} />
             </div>
         </div>
     );
