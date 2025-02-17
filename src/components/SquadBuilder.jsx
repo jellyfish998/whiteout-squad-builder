@@ -32,7 +32,7 @@ const SquadBuilder = () => {
     const [isRallyCaller, setIsRallyCaller] = useState(true);
     const [totalRequiredTroops, setTotalRequiredTroops] = useState(0);
     const [additionalTroopsRequired, setAdditionalTroopsRequired] = useState({});
-    const [adjustedRatios, setAdjustedRatios] = useState({});
+    const [adjustedRatios, setAdjustedRatios] = useState({}); //keep for display
 
 
   const handleTroopChange = (type, newTroopLevels) => {
@@ -111,7 +111,7 @@ const SquadBuilder = () => {
     const handleRallyCallerChange = (event) => {
         const isChecked = event.target.checked;
         setIsRallyCaller(isChecked);
-        setMarchSizes(prevSizes => {
+         setMarchSizes(prevSizes => {
             const newSizes = [...prevSizes];
               if (isChecked) {
                 // Add a new march size at the beginning.
