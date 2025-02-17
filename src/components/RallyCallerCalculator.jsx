@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops, sequence }) => {
+const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops }) => {
 
     const calculateRallyCallerSquad = () => {
         if (!marchSize) {
@@ -14,7 +14,13 @@ const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops, sequence 
              rallyCallerSquad[type] = 0; //init
             let troopsToAllocate = Math.floor(marchSize * desiredRatio[type]);
              // Sort troop levels by sequence (higher levels first, based on sequence object)
-             const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => sequence[type] - sequence[type]);
+            const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {  // Moved to here.
+                if (b.sequence !== a.sequence) {
+                    return b.sequence - a.sequence; // Highest sequence first
+                } else {
+                    return b.level - a.level;     // Highest level first
+                }
+            });
 
               for (const levelData of sortedTroopLevels) {
                 const troopsToUse = Math.min(troopsToAllocate, levelData.count);

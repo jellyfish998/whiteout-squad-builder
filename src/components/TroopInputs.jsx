@@ -1,8 +1,8 @@
 import React from 'react';
 
-const TroopInputs = ({ totalTroops, sequence, onTroopChange, onSequenceChange }) => {
+const TroopInputs = ({ totalTroops, onTroopChange }) => {
     const handleAddTroopLevel = (type) => {
-        onTroopChange(type, [...totalTroops[type], { level: 1, count: 0 }]);
+        onTroopChange(type, [...totalTroops[type], { level: 1, count: 0, sequence: 1 }]);
     };
 
     const handleRemoveTroopLevel = (type, index) => {
@@ -19,6 +19,12 @@ const TroopInputs = ({ totalTroops, sequence, onTroopChange, onSequenceChange })
     const handleTroopLevelChange = (type, index, value) => {
         const newTroops = [...totalTroops[type]];
         newTroops[index] = { ...newTroops[index], level: parseInt(value) || 1 };
+        onTroopChange(type, newTroops);
+    };
+
+    const handleTroopSequenceChange = (type, index, value) => {
+        const newTroops = [...totalTroops[type]];
+        newTroops[index] = { ...newTroops[index], sequence: parseInt(value) || 1};
         onTroopChange(type, newTroops);
     };
     return (
@@ -56,9 +62,9 @@ const TroopInputs = ({ totalTroops, sequence, onTroopChange, onSequenceChange })
                                 </td>
                                   <td>
                                     <input
-                                         type="number"
-                                        value={sequence[type]}
-                                        onChange={(e) => onSequenceChange(type, e.target.value)}
+                                        type="number"
+                                         value={troopLevel.sequence}
+                                        onChange={(e) => handleTroopSequenceChange(type, index, e.target.value)}
                                         min="1"
                                      />
                                  </td>
@@ -70,7 +76,7 @@ const TroopInputs = ({ totalTroops, sequence, onTroopChange, onSequenceChange })
                     ))}
                     {Object.keys(totalTroops).map((type) => (
                         <tr key={`add-${type}`}>
-                           <td colSpan="4">
+                           <td colSpan="5">
                                 <button onClick={() => handleAddTroopLevel(type)}>Add {type.charAt(0).toUpperCase() + type.slice(1)} Level</button>
                             </td>
                         </tr>

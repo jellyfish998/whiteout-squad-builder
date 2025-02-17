@@ -10,19 +10,14 @@ import RallyCallerCalculator from './RallyCallerCalculator';
 
 const SquadBuilder = () => {
     const [totalTroops, setTotalTroops] = useState({
-        infantry: [{ level: 1, count: 338682 }],
-        lancer: [{ level: 1, count: 374057 }],
-        marksman: [{ level: 1, count: 447556 }],
+        infantry: [{ level: 1, count: 338682, sequence: 3 }],
+        lancer: [{ level: 1, count: 374057, sequence: 2 }],
+        marksman: [{ level: 1, count: 447556, sequence: 1 }],
     });
     const [desiredRatio, setDesiredRatio] = useState({
         infantry: 0.1,
         lancer: 0.1,
         marksman: 0.8,
-    });
-    const [sequence, setSequence] = useState({
-        infantry: 3,
-        lancer: 2,
-        marksman: 1,
     });
 
     const [numSquads, setNumSquads] = useState(6);
@@ -32,7 +27,7 @@ const SquadBuilder = () => {
     const [isRallyCaller, setIsRallyCaller] = useState(true);
     const [totalRequiredTroops, setTotalRequiredTroops] = useState(0);
     const [additionalTroopsRequired, setAdditionalTroopsRequired] = useState({});
-    const [adjustedRatios, setAdjustedRatios] = useState({}); //keep for display
+    const [adjustedRatios, setAdjustedRatios] = useState({});
 
 
   const handleTroopChange = (type, newTroopLevels) => {
@@ -48,17 +43,6 @@ const SquadBuilder = () => {
         setDesiredRatio({ ...desiredRatio, [type]: ratio });
         setError('');
     };
-
-    const handleSequenceChange = (type, value) => {
-        const seq = parseInt(value)
-        if (isNaN(seq) || seq < 1) {
-            setError(`Invalid sequence, must be a positive number`);
-            return;
-        }
-        setSequence({ ...sequence, [type]: parseInt(value) || 0 });
-        setError('');
-    };
-
 
     const handleNumSquadsChange = (value) => {
         const newNumSquads = parseInt(value) || 0;
@@ -129,7 +113,7 @@ const SquadBuilder = () => {
     const calculateSquads = () => {
         setError('');
         setSquads([]);
-        setAdjustedRatios({}); // Reset adjusted ratios
+        setAdjustedRatios({}); // Reset adjusted ratios - keep for display.
 
         // --- 1. Input Validation ---
         const totalRatio = Object.values(desiredRatio).reduce((sum, r) => sum + r, 0);
@@ -164,7 +148,13 @@ const SquadBuilder = () => {
                 rallyCallerSquad[type] = 0; // Initialize
                 let troopsToAllocate = Math.floor(marchSizes[0] * desiredRatio[type]);
                  // Sort troop levels by sequence (higher levels first, based on sequence object)
-                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => sequence[type] - sequence[type]);
+                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {
+                    if (b.sequence !== a.sequence) {
+                        return b.sequence - a.sequence; // Highest sequence first
+                    } else {
+                        return b.level - a.level;     // Highest level first
+                    }
+                });
 
                 for (const levelData of sortedTroopLevels) {
                     const troopsToUse = Math.min(troopsToAllocate, levelData.count);
@@ -189,7 +179,6 @@ const SquadBuilder = () => {
             totalMarchSize += marchSizes[i];
         }
 
-        const sortedSequence = Object.entries(sequence).sort(([, a], [, b]) => a - b);
         const adjRatio = {};
          // Initialize adjRatio for all troop types
         for (const type in totalTroops) {
@@ -203,7 +192,16 @@ const SquadBuilder = () => {
         }
 
         // *** CORRECTED ADJUSTED RATIO LOGIC ***
-        for (const [troopType, seqValue] of sortedSequence) {
+        //sort troops
+         const allTroopTypes = Object.keys(totalTroops);
+        const sortedSequence = allTroopTypes.sort((typeA, typeB) => {
+            // Find the highest sequence number for each troop type
+            const highestSequenceA = remainingTroops[typeA].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
+            const highestSequenceB = remainingTroops[typeB].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
+            return highestSequenceB - highestSequenceA; // Sort in descending order
+        });
+
+        for (const troopType of sortedSequence) {
             let allocated = Math.min(localRemainingTroops[troopType], remainingMarchCapacity);
             adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0; // Avoid division by zero.
 
@@ -211,7 +209,6 @@ const SquadBuilder = () => {
             localRemainingTroops[troopType] -= allocated; //update local remaining troops.
         }
 
-        setAdjustedRatios(adjRatio);
 
         // --- 4. Build the User-Defined Squads ---
         for (let i = startIndex; i < numSquads + startIndex; i++) {
@@ -220,7 +217,13 @@ const SquadBuilder = () => {
                 squad[type] = 0;
                 let troopsToAllocate = Math.floor(marchSizes[i] * adjRatio[type]);
 
-                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => sequence[type] - sequence[type]);
+                const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {
+                    if (b.sequence !== a.sequence) {
+                        return b.sequence - a.sequence; // Highest sequence first
+                    } else {
+                        return b.level - a.level;     // Highest level first
+                    }
+                });
                 for (const levelData of sortedTroopLevels) {
                     const troopsToUse = Math.min(troopsToAllocate, levelData.count);
                     squad[type] += troopsToUse;
@@ -231,8 +234,6 @@ const SquadBuilder = () => {
             }
             calculatedSquads.push(squad);
         }
-
-        setSquads(calculatedSquads);
 
         // --- 5. Calculate Total Required and Additional Troops ---
         let totalRequired = 0;
@@ -258,6 +259,10 @@ const SquadBuilder = () => {
             }
         }
         setAdditionalTroopsRequired(additionalRequired);
+
+        // --- 6. Update State (Correct Order) ---
+        setAdjustedRatios(adjRatio); // for display
+        setSquads(calculatedSquads);
     };
 
 
@@ -279,9 +284,7 @@ const SquadBuilder = () => {
                 <RatioInputs desiredRatio={desiredRatio} onRatioChange={handleRatioChange} />
                 <TroopInputs
                     totalTroops={totalTroops}
-                    sequence={sequence}
                     onTroopChange={handleTroopChange}
-                    onSequenceChange={handleSequenceChange}
                 />
 
 
@@ -291,16 +294,15 @@ const SquadBuilder = () => {
             <div className="results-section">
                 <h3>Adjusted Ratios</h3>
                 <p>
-                    Infantry: {adjRatio.infantry?.toFixed(4) || 0},&nbsp;
-                    Lancer: {adjRatio.lancer?.toFixed(4) || 0},&nbsp;
-                    Marksman: {adjRatio.marksman?.toFixed(4) || 0}
+                    Infantry: {adjustedRatios.infantry?.toFixed(2) || 0},&nbsp;
+                    Lancer: {adjustedRatios.lancer?.toFixed(2) || 0},&nbsp;
+                    Marksman: {adjustedRatios.marksman?.toFixed(2) || 0}
                 </p>
                 {isRallyCaller && (
                     <RallyCallerCalculator
                         marchSize={marchSizes[0]}
                         desiredRatio={desiredRatio}
                         totalTroops={totalTroops}
-                        sequence={sequence}
                     />
                 )}
                 <SquadTable squads={squads} isRallyCaller={isRallyCaller}/>

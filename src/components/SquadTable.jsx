@@ -22,12 +22,43 @@ const SquadTable = ({ squads, isRallyCaller }) => {
                         } else if (isRallyCaller) {
                             label = `Squad ${index}`;
                         }
+
                         return (
                             <tr key={index}>
                                 <td>{label}</td>
-                                <td>{squad.infantry}</td>
-                                <td>{squad.lancer}</td>
-                                <td>{squad.marksman}</td>
+                                <td>
+                                    {Array.isArray(squad.infantry) ? (
+                                        squad.infantry.map((levelData, levelIndex) => (
+                                            <div key={`infantry-<span class="math-inline">\{index\}\-</span>{levelIndex}`}>
+                                                Level {levelData.level}: {levelData.count}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        squad.infantry // Fallback for initial state or errors
+                                    )}
+                                </td>
+                                <td>
+                                     {Array.isArray(squad.lancer) ? (
+                                        squad.lancer.map((levelData, levelIndex) => (
+                                            <div key={`lancer-<span class="math-inline">\{index\}\-</span>{levelIndex}`}>
+                                                Level {levelData.level}: {levelData.count}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        squad.lancer
+                                    )}
+                                </td>
+                                <td>
+                                    {Array.isArray(squad.marksman) ? (
+                                        squad.marksman.map((levelData, levelIndex) => (
+                                            <div key={`marksman-${index}-${levelIndex}`}>
+                                                Level {levelData.level}: {levelData.count}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        squad.marksman
+                                    )}
+                                </td>
                             </tr>
                         );
                     })}
