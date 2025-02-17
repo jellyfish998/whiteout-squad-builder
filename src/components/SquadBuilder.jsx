@@ -4,6 +4,7 @@ import MarchSizeInputs from './MarchSizeInputs';
 import RallyCallerInput from './RallyCallerInput';
 import SquadTable from './SquadTable';
 import TroopTotals from './TroopTotals';
+import AdjustedRatios from './AdjustedRatios';
 import RatioInputs from './RatioInputs';
 import RallyCallerCalculator from './RallyCallerCalculator';
 
@@ -31,15 +32,17 @@ const SquadBuilder = () => {
     const [isRallyCaller, setIsRallyCaller] = useState(true);
     const [totalRequiredTroops, setTotalRequiredTroops] = useState(0);
     const [additionalTroopsRequired, setAdditionalTroopsRequired] = useState({});
+    const [adjustedRatios, setAdjustedRatios] = useState({});
 
-    const handleTroopChange = (type, newTroopLevels) => {
-        setTotalTroops({ ...totalTroops, [type]: newTroopLevels });
-    };
+
+  const handleTroopChange = (type, newTroopLevels) => {
+    setTotalTroops({ ...totalTroops, [type]: newTroopLevels });
+  };
 
     const handleRatioChange = (type, value) => {
         const ratio = parseFloat(value);
         if (isNaN(ratio) || ratio < 0 || ratio > 1) {
-            setError(`Invalid ratio for ${type}. Must be between 0 and 1`);
+            setError(`Invalid ratio for ${type}.  Must be between 0 and 1`);
             return;
         }
         setDesiredRatio({ ...desiredRatio, [type]: ratio });
@@ -108,7 +111,7 @@ const SquadBuilder = () => {
     const handleRallyCallerChange = (event) => {
         const isChecked = event.target.checked;
         setIsRallyCaller(isChecked);
-         setMarchSizes(prevSizes => {
+        setMarchSizes(prevSizes => {
             const newSizes = [...prevSizes];
               if (isChecked) {
                 // Add a new march size at the beginning.
@@ -126,6 +129,7 @@ const SquadBuilder = () => {
     const calculateSquads = () => {
         setError('');
         setSquads([]);
+        setAdjustedRatios({}); // Reset adjusted ratios
 
         // --- 1. Input Validation ---
         const totalRatio = Object.values(desiredRatio).reduce((sum, r) => sum + r, 0);
@@ -207,6 +211,7 @@ const SquadBuilder = () => {
             localRemainingTroops[troopType] -= allocated; //update local remaining troops.
         }
 
+        setAdjustedRatios(adjRatio);
 
         // --- 4. Build the User-Defined Squads ---
         for (let i = startIndex; i < numSquads + startIndex; i++) {
@@ -227,6 +232,7 @@ const SquadBuilder = () => {
             calculatedSquads.push(squad);
         }
 
+        setSquads(calculatedSquads);
 
         // --- 5. Calculate Total Required and Additional Troops ---
         let totalRequired = 0;
