@@ -1,12 +1,11 @@
-// src/components/SquadBuilder.jsx
 import React, { useState } from 'react';
 import TroopInputs from './TroopInputs';
 import MarchSizeInputs from './MarchSizeInputs';
 import RallyCallerInput from './RallyCallerInput';
 import SquadTable from './SquadTable';
 import TroopTotals from './TroopTotals';
-import RatioSliders from './RatioSliders';
-import RallyCallerCalculator from './RallyCallerCalculator';
+import RatioInputs from './RatioInputs';
+import RallyCallerCalculator from './RallyCallerCalculator'; // Import - but we won't render it directly
 
 const SquadBuilder = () => {
     const [totalTroops, setTotalTroops] = useState({
