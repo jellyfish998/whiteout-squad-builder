@@ -1,10 +1,11 @@
+// src/components/SquadBuilder.jsx
 import React, { useState } from 'react';
 import TroopInputs from './TroopInputs';
 import MarchSizeInputs from './MarchSizeInputs';
 import RallyCallerInput from './RallyCallerInput';
 import SquadTable from './SquadTable';
 import TroopTotals from './TroopTotals';
-import RatioSliders from './RatioSliders'; //Correct import
+import RatioSliders from './RatioSliders';
 import RallyCallerCalculator from './RallyCallerCalculator';
 
 const SquadBuilder = () => {
@@ -33,7 +34,7 @@ const SquadBuilder = () => {
     setTotalTroops({ ...totalTroops, [type]: newTroopLevels });
   };
 
-   const handleRatioChange = (newRatios) => {
+    const handleRatioChange = (newRatios) => {
         //Sets the desired Ratio, to the new ratios
         setDesiredRatio(newRatios);
     };
@@ -301,13 +302,6 @@ const SquadBuilder = () => {
                     Lancer: {adjustedRatios.lancer?.toFixed(2) || 0},&nbsp;
                     Marksman: {adjustedRatios.marksman?.toFixed(2) || 0}
                 </p>
-                {isRallyCaller && (
-                    <RallyCallerCalculator
-                        marchSize={marchSizes[0]}
-                        desiredRatio={desiredRatio}
-                        totalTroops={totalTroops}
-                    />
-                )}
                 <SquadTable squads={squads} isRallyCaller={isRallyCaller}/>
                 <TroopTotals totalRequiredTroops={totalRequiredTroops} additionalTroopsRequired={additionalTroopsRequired} />
             </div>
