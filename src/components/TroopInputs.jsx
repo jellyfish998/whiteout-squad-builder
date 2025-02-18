@@ -28,9 +28,9 @@ const TroopInputs = ({ totalTroops, onTroopChange }) => {
         onTroopChange(type, newTroops);
     };
     return (
-        <div>
+        <div className="input-group">
             <h3>Troop Inputs</h3>
-            <table>
+            <table className="troop-inputs-table">
                 <thead>
                     <tr>
                         <th>Troop Type</th>
@@ -43,14 +43,14 @@ const TroopInputs = ({ totalTroops, onTroopChange }) => {
                 <tbody>
                     {Object.keys(totalTroops).map((type) => (
                         totalTroops[type].map((troopLevel, index) => (
-                            <tr key={`${type}-${index}`}>
+                            <tr key={`<span class="math-inline">\{type\}\-</span>{index}`}>
                                 <td>{type.charAt(0).toUpperCase() + type.slice(1)}</td>
                                  <td>
                                     <input
                                         type="number"
                                         value={troopLevel.level}
-                                        onChange={(e) => handleTroopLevelChange(type, index, e.target.value)}
-                                        min="1"
+                                        onChange={(e) => handleTroopLevelChange(type, index, e.target.value)}min="1"
+                                        className="level-input"
                                     />
                                  </td>
                                 <td>
@@ -58,6 +58,7 @@ const TroopInputs = ({ totalTroops, onTroopChange }) => {
                                         type="number"
                                         value={troopLevel.count}
                                         onChange={(e) => handleTroopCountChange(type, index, e.target.value)}
+                                        className="count-input"
                                     />
                                 </td>
                                   <td>
@@ -65,11 +66,14 @@ const TroopInputs = ({ totalTroops, onTroopChange }) => {
                                         type="number"
                                          value={troopLevel.sequence}
                                         onChange={(e) => handleTroopSequenceChange(type, index, e.target.value)}
+                                        className="sequence-input"
                                         min="1"
                                      />
                                  </td>
                                 <td>
-                                    <button onClick={() => handleRemoveTroopLevel(type, index)}>Remove</button>
+                                    <button className="remove-button" onClick={() => handleRemoveTroopLevel(type, index)}>
+                                        Remove
+                                    </button>
                                 </td>
                             </tr>
                         ))
@@ -77,7 +81,9 @@ const TroopInputs = ({ totalTroops, onTroopChange }) => {
                     {Object.keys(totalTroops).map((type) => (
                         <tr key={`add-${type}`}>
                            <td colSpan="5">
-                                <button onClick={() => handleAddTroopLevel(type)}>Add {type.charAt(0).toUpperCase() + type.slice(1)} Level</button>
+                                <button className="add-button" onClick={() => handleAddTroopLevel(type)}>
+                                    Add {type.charAt(0).toUpperCase() + type.slice(1)} Level
+                                </button>
                             </td>
                         </tr>
                     ))}

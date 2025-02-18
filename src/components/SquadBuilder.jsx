@@ -4,8 +4,7 @@ import MarchSizeInputs from './MarchSizeInputs';
 import RallyCallerInput from './RallyCallerInput';
 import SquadTable from './SquadTable';
 import TroopTotals from './TroopTotals';
-import AdjustedRatios from './AdjustedRatios';
-import RatioInputs from './RatioInputs';
+import RatioSliders from './RatioSliders'; //Correct import
 import RallyCallerCalculator from './RallyCallerCalculator';
 
 const SquadBuilder = () => {
@@ -34,14 +33,9 @@ const SquadBuilder = () => {
     setTotalTroops({ ...totalTroops, [type]: newTroopLevels });
   };
 
-    const handleRatioChange = (type, value) => {
-        const ratio = parseFloat(value);
-        if (isNaN(ratio) || ratio < 0 || ratio > 1) {
-            setError(`Invalid ratio for ${type}.  Must be between 0 and 1`);
-            return;
-        }
-        setDesiredRatio({ ...desiredRatio, [type]: ratio });
-        setError('');
+   const handleRatioChange = (newRatios) => {
+        //Sets the desired Ratio, to the new ratios
+        setDesiredRatio(newRatios);
     };
 
     const handleNumSquadsChange = (value) => {
@@ -145,7 +139,7 @@ const SquadBuilder = () => {
             rallyCallerIndex = 0;
             const rallyCallerSquad = {};
             for (const type in remainingTroops) {
-                rallyCallerSquad[type] = 0; // Initialize
+                rallyCallerSquad[type] = []; // Initialize as array
                 let troopsToAllocate = Math.floor(marchSizes[0] * desiredRatio[type]);
                  // Sort troop levels by sequence (higher levels first, based on sequence object)
                 const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {
@@ -158,7 +152,9 @@ const SquadBuilder = () => {
 
                 for (const levelData of sortedTroopLevels) {
                     const troopsToUse = Math.min(troopsToAllocate, levelData.count);
-                    rallyCallerSquad[type] += troopsToUse;
+                    if(troopsToUse > 0){
+                        rallyCallerSquad[type].push({level: levelData.level, count: troopsToUse});
+                    }
                     troopsToAllocate -= troopsToUse;
                     levelData.count -= troopsToUse; // Deduct from the copied remainingTroops
                     if (troopsToAllocate <= 0) break;
@@ -193,14 +189,13 @@ const SquadBuilder = () => {
 
         // *** CORRECTED ADJUSTED RATIO LOGIC ***
         //sort troops
-         const allTroopTypes = Object.keys(totalTroops);
+        const allTroopTypes = Object.keys(totalTroops);
         const sortedSequence = allTroopTypes.sort((typeA, typeB) => {
             // Find the highest sequence number for each troop type
             const highestSequenceA = remainingTroops[typeA].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
             const highestSequenceB = remainingTroops[typeB].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
             return highestSequenceB - highestSequenceA; // Sort in descending order
         });
-
         for (const troopType of sortedSequence) {
             let allocated = Math.min(localRemainingTroops[troopType], remainingMarchCapacity);
             adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0; // Avoid division by zero.
@@ -214,7 +209,7 @@ const SquadBuilder = () => {
         for (let i = startIndex; i < numSquads + startIndex; i++) {
             const squad = {};
             for (const type in remainingTroops) {
-                squad[type] = 0;
+                squad[type] = [];
                 let troopsToAllocate = Math.floor(marchSizes[i] * adjRatio[type]);
 
                 const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {
@@ -226,7 +221,9 @@ const SquadBuilder = () => {
                 });
                 for (const levelData of sortedTroopLevels) {
                     const troopsToUse = Math.min(troopsToAllocate, levelData.count);
-                    squad[type] += troopsToUse;
+                    if(troopsToUse > 0){
+                        squad[type].push({level: levelData.level, count: troopsToUse});
+                    }
                     troopsToAllocate -= troopsToUse;
                     levelData.count -= troopsToUse;
                     if (troopsToAllocate <= 0) break; // Optimization
@@ -247,7 +244,13 @@ const SquadBuilder = () => {
             additionalRequired[type] = [];
              let requiredForSquads = 0;
             for(let squad of calculatedSquads){
-                requiredForSquads += squad[type];
+                if(Array.isArray(squad[type])){
+                    for(let level of squad[type]){
+                        requiredForSquads+= level.count;
+                    }
+                } else {
+                    requiredForSquads += squad[type];
+                }
             }
 
             let remainingTypeTroops = totalTroops[type].reduce((sum, level) => sum + level.count, 0);
@@ -281,7 +284,7 @@ const SquadBuilder = () => {
                     onNumSquadsChange={handleNumSquadsChange}
                     onMarchSizeChange={handleMarchSizeChange}
                 />
-                <RatioInputs desiredRatio={desiredRatio} onRatioChange={handleRatioChange} />
+                <RatioSliders desiredRatio={desiredRatio} onRatioChange={handleRatioChange} />
                 <TroopInputs
                     totalTroops={totalTroops}
                     onTroopChange={handleTroopChange}
