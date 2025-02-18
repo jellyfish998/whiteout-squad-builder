@@ -68,3 +68,66 @@ h2, h3 {
 h3 {
   margin-top: 1em;
 }
+/* ... (previous styles in index.css) ... */
+
+@media (max-width: 768px) {  /* Or whatever breakpoint you prefer */
+  /* Existing table styles for horizontal scrolling (keep these) */
+  table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+  }
+   th, td {
+          min-width: 70px;
+      }
+
+  /* New styles for the tiered list */
+  table, thead, tbody, th, td, tr {
+      display: block; /* Make all table elements block-level */
+  }
+
+  thead tr {
+      position: absolute; /* Hide the table header on small screens */
+      top: -9999px;
+      left: -9999px;
+  }
+
+  tr {
+      margin-bottom: 1em; /* Add spacing between "squads" */
+      border: 1px solid #ccc; /* Add a border around each "squad" */
+  }
+
+  td {
+      /* Behave like a "row" */
+      border: none;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      padding-left: 50%; /* Create space for the "labels" */
+      white-space: normal; /* Allow text wrapping within cells */
+      text-align: left;
+  }
+
+
+  td:before {
+      /* Now like a table header */
+      position: absolute;
+      /* Top/left values mimic padding */
+      top: 6px;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: bold;
+  }
+
+   /* Label the data */
+  td:before { content: attr(data-label); } /* Use data-label attribute */
+  .squad-label{
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-top: .5em;
+      margin-bottom: 0.5em;
+  }
+
+}

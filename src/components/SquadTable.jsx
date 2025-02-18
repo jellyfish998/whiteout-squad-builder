@@ -1,3 +1,4 @@
+// src/components/SquadTable.jsx
 import React from 'react';
 
 const SquadTable = ({ squads, isRallyCaller }) => {
@@ -25,22 +26,22 @@ const SquadTable = ({ squads, isRallyCaller }) => {
 
                         return (
                             <tr key={index}>
-                                <td>{label}</td>
-                                <td>
+                                <td data-label="Squad" className="squad-label">{label}</td>
+                                <td data-label="Infantry">
                                     {Array.isArray(squad.infantry) ? (
                                         squad.infantry.map((levelData, levelIndex) => (
-                                            <div key={`infantry-<span class="math-inline">\{index\}\-</span>{levelIndex}`}>
+                                            <div key={`infantry-${index}-${levelIndex}`}>
                                                 Level {levelData.level}: {levelData.count}
                                             </div>
                                         ))
                                     ) : (
-                                        squad.infantry // Fallback for initial state or errors
+                                        squad.infantry // Fallback
                                     )}
                                 </td>
-                                <td>
+                                <td data-label="Lancer">
                                      {Array.isArray(squad.lancer) ? (
                                         squad.lancer.map((levelData, levelIndex) => (
-                                            <div key={`lancer-<span class="math-inline">\{index\}\-</span>{levelIndex}`}>
+                                            <div key={`lancer-${index}-${levelIndex}`}>
                                                 Level {levelData.level}: {levelData.count}
                                             </div>
                                         ))
@@ -48,7 +49,7 @@ const SquadTable = ({ squads, isRallyCaller }) => {
                                         squad.lancer
                                     )}
                                 </td>
-                                <td>
+                                <td data-label="Marksman">
                                     {Array.isArray(squad.marksman) ? (
                                         squad.marksman.map((levelData, levelIndex) => (
                                             <div key={`marksman-${index}-${levelIndex}`}>
