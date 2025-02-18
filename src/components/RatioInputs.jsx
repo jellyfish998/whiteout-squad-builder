@@ -3,9 +3,9 @@ import React from 'react';
 
 const RatioInputs = ({ desiredRatio, onRatioChange }) => {
     return (
-        <div className="input-group">
+        <div>
             <h3>Desired Ratios</h3>
-            <table className='ratio-inputs-table'>
+            <table>
                 <thead>
                     <tr>
                         <th>Troop Type</th>
