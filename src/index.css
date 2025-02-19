@@ -1,70 +1,390 @@
+:root {
+  --primary-bg: #f0f0f0;
+  --secondary-bg: #fff;
+  --primary-text: #333;
+  --secondary-text: #6c757d;
+  --accent-color: #007bff;
+  --accent-color-hover: #0056b3;
+  --border-color: #ced4da;
+  --error-color: #dc3545;
+  --header-bg: #fff;
+  --header-text: #333;
+  --footer-bg: #343a40;
+  --footer-text: #fff;
+}
+
 body {
   font-family: sans-serif;
   margin: 0;
   padding: 20px;
-  background-color: #f0f0f0;
+  background-color: var(--primary-bg);
   display: flex;
   justify-content: center;
+  min-height: 100vh;
 }
 
 .App {
-width: 100%;
-max-width: 800px; /* Adjust as needed */
-
+  width: 100%;
+  max-width: 800px; /* Adjust as needed */
+   display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+      "header"
+      "main"
+      "footer";
+  gap: 20px;
+  padding: 20px;
 }
+
+/* --- Header --- */
+.header {
+  grid-area: header;
+  background-color: var(--header-bg);
+  padding: 10px 20px;
+   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--primary-text);
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+.nav-links a:hover{
+  text-decoration: underline;
+}
+
+/* --- Main Content --- */
 .squad-builder {
-  background-color: white;
+  grid-area: main;
+  background-color: var(--secondary-bg);
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .input-section,
 .results-section {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
-table {
+/* Input Groups (for general layout) */
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: var(--secondary-text);
+}
+
+input[type="number"],
+input[type="checkbox"]
+{
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+  margin-bottom: 5px;
 }
 
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
+.checkbox-label{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: .5em;
 
-th {
-  background-color: #f2f2f2;
 }
-
-input[type="number"] {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 80px; /* Adjust as needed */
-}
-
 button {
-  padding: 10px 15px;
-  background-color: #007bff;
+  padding: 12px 20px;
+  background-color: var(--accent-color);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  margin-top: 1rem;
+  font-size: 1rem;
+  width: 100%;
+  display: block;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--accent-color-hover);
 }
 
 h2, h3 {
+  margin-bottom: 15px;
+  margin-top: 0;
+  color: var(--primary-text);
+}
+.results-section h3{
+  margin-top: 1em;
+}
+.error {
+  color: var(--error-color);
   margin-bottom: 10px;
 }
-h3 {
-  margin-top: 1em;
+
+/* --- Tables --- */
+
+table {
+width: 100%;
+border-collapse: collapse;
+}
+
+th, td {
+padding: 8px;
+border: 1px solid var(--border-color);
+text-align: left;
+}
+
+th {
+background-color: #f8f9fa;
+font-weight: bold;
+}
+
+.troop-inputs-table{
+  display: block;
+  overflow-x: auto;
+}
+
+.troop-inputs-table th,
+.troop-inputs-table td {
+  text-align: center;
+}
+
+.level-input, .sequence-input {
+width: 60px;
+margin: 0 auto;
+display: block;
+}
+
+.count-input {
+width: 100px;
+margin: 0 auto;
+display: block;
+}
+
+.remove-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}
+
+.add-buttons-container {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.add-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  flex: 1 0 calc(33.33% - 10px); /*  for 3 buttons in a row */
+  box-sizing: border-box;
+  white-space: nowrap; /* Prevent text wrapping */
+
+}
+
+.add-button:hover {
+  background-color: #218838;
+}
+/* Slider Styles */
+.slider-group {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  margin-bottom: 10px;
+}
+
+.slider-group label {
+  margin-bottom: 5px;
+  text-align: left; /* Align labels to the left */
+}
+
+/* Container for the stacked bars */
+.slider-container {
+  position: relative;
+  width: 100%;
+  height: 20px; /* Fixed height for the bars */
+  background-color: #ddd; /* Light gray background */
+  border-radius: 5px;
+  overflow: hidden; /* Ensure bars stay within bounds */
+  margin-bottom: 5px;
+}
+
+/* Desired ratio bar (blue) */
+.slider-bar-desired {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #007bff; /* Your primary blue color */
+  transition: width 0.3s ease; /* Smooth transition for width changes */
+}
+
+/* Adjusted ratio bar (red, overlaid) */
+.slider-bar-adjusted {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: #dc3545; /* Your error/warning color */
+  transition: width 0.3s ease;
+}
+
+.slider-group span {
+text-align: right;
+font-weight: bold;
+}
+.squad-label {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+  display: block;
+  grid-column: 1 / -1; /* For grid layout on larger screens */
+}
+/* --- Footer --- */
+.footer {
+  grid-area: footer;
+  background-color: var(--footer-bg);
+  color: var(--footer-text);
+  padding: 10px 20px;
+   display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer a {
+  color: var(--footer-text);
+  text-decoration: none;
+  margin-left: 10px;
+}
+
+.footer a:hover{
+  text-decoration: underline;
+}
+/* --- Responsive Styles --- */
+
+/* Larger screens - Use Grid for Input Layout */
+@media (min-width: 769px) {
+  .input-section {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Two columns */
+      gap: 20px; /* Spacing between grid items */
+  }
+
+   /* Ensure direct children of input-section are grid items */
+  .input-section > * {
+      grid-column: span 1; /* Each item takes one column by default */
+  }
+
+  .input-section > button {
+      grid-column: 1 / -1; /* Button spans all columns */
+  }
+  .squad-label {
+      grid-column: 1 / -1; /* Make squad label span all columns */
+  }
+
+  /* Make the troop inputs table take up two columns*/
+  .troop-inputs-table {
+      grid-column: span 2;
+  }
+      .march-sizes-container{
+      grid-column: span 2;
+  }
+
+}
+
+/* Mobile Styles (Stack everything vertically) */
+@media (max-width: 768px) {
+
+  /*  Make the table data stack */
+  .results-section table, .results-section thead, .results-section tbody, .results-section th, .results-section td, .results-section tr {
+      display: block;
+  }
+
+  .results-section thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+  }
+
+   .results-section tr {
+      margin-bottom: 1em;
+      border: 1px solid #ccc;
+  }
+
+  .results-section td {
+      border: none;
+      border-bottom: 1px solid #eee;
+      position: relative;
+      padding-left: 50%;
+      white-space: normal;
+      text-align: left;
+  }
+
+  .results-section td:before {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: bold;
+  }
+
+  .results-section td:before {
+      content: attr(data-label);
+  }
+  .squad-label {
+          font-weight: bold;
+          font-size: 1.1em;
+          margin-top: 0.5em;
+          margin-bottom: 0.25em;
+          display: block; /* Ensure it takes full width */
+      }
+   /* Input section stacking */
+   .input-section > * {
+      width: 100%; /* Full width on mobile */
+  }
+  .input-group label {
+          margin-bottom: 0.25em;
+      }
+      .add-buttons-container{
+      display: grid;
+      grid-template-columns: repeat(1, 1fr); /* Two columns */
+      gap: 20px; /* Spacing between grid items */
+  }
 }

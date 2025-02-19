@@ -1,50 +1,40 @@
 import React from 'react';
 
 const MarchSizeInputs = ({ numSquads, marchSizes, isRallyCaller, onNumSquadsChange, onMarchSizeChange }) => {
-    return (
-        <>
-            <div>
-                <label>Number of Squads:</label>
-                <input
-                    type="number"
-                    value={numSquads}
-                    onChange={(e) => onNumSquadsChange(e.target.value)}
-                    min="1"
-                />
+  return (
+    <div className="input-group">
+      <label htmlFor="numSquads">Number of Squads:</label>
+      <input
+        type="number"
+        id="numSquads"
+        value={numSquads}
+        onChange={(e) => onNumSquadsChange(e.target.value)}
+        min="1"
+      />
+      <div className="march-sizes-container">
+        <h3>March Sizes</h3>
+        {marchSizes.slice(0, isRallyCaller ? numSquads + 1 : numSquads).map((size, index) => {
+          let label = `Squad ${index + 1}`;
+          if (isRallyCaller && index === 0) {
+            label = "Squad 1 (Rally Caller)";
+          } else if (isRallyCaller) {
+            label = `Squad ${index}`;
+          }
+          return (
+            <div key={index} className="march-size-input">
+              <label htmlFor={`marchSize-${index}`}>{label}</label>
+              <input
+                type="number"
+                id={`marchSize-${index}`}
+                value={size}
+                onChange={(e) => onMarchSizeChange(index, e.target.value)}
+              />
             </div>
-            <h3>March Sizes</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Squad</th>
-                        <th>March Size</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {marchSizes.slice(0, isRallyCaller ? numSquads + 1 : numSquads).map((size, index) => {
-                        let label = `Squad ${index + 1}`;
-                        if (isRallyCaller && index === 0) {
-                            label = "Squad 1 (Rally Caller)";
-                        } else if (isRallyCaller) {
-                            label = `Squad ${index}`;
-                        }
-                        return (
-                            <tr key={index}>
-                                <td>{label}</td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        value={size}
-                                        onChange={(e) => onMarchSizeChange(index, e.target.value)}
-                                    />
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </>
-    );
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 export default MarchSizeInputs;
