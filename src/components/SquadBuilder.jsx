@@ -6,37 +6,7 @@ import SquadTable from './SquadTable';
 import TroopTotals from './TroopTotals';
 import RatioSliders from './RatioSliders';
 import RallyCallerCalculator from './RallyCallerCalculator';
-
-// PURE FUNCTION for adjusted ratio calculation.  Takes inputs, returns output.
-const calculateAdjustedRatios = (totalTroops, remainingTroops, desiredRatio, totalMarchSize) => {
-    const allTroopTypes = Object.keys(totalTroops);
-    const sortedSequence = allTroopTypes.sort((typeA, typeB) => {
-    // Find the highest sequence number for each troop type
-    const highestSequenceA = remainingTroops[typeA].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
-    const highestSequenceB = remainingTroops[typeB].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
-    return highestSequenceB - highestSequenceA; // Sort in descending order
-   });
-
-    const adjRatio = {};
-    for (const type in totalTroops) {
-        adjRatio[type] = 0; // Initialize
-    }
-
-    let remainingMarchCapacity = totalMarchSize;
-    let localRemainingTroops = {};
-    for (const type in remainingTroops) {
-      localRemainingTroops[type] = remainingTroops[type].reduce((sum, level) => sum + level.count, 0);
-    }
-
-    for (const troopType of sortedSequence) {
-        let allocated = Math.min(localRemainingTroops[troopType], remainingMarchCapacity);
-        adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0; // Avoid division by zero.
-        remainingMarchCapacity -= allocated;
-        localRemainingTroops[troopType] -= allocated;
-    }
-  return adjRatio;
-};
-
+import AdjustedRatioDisplay from './AdjustedRatioDisplay'; // Import the component
 
 const SquadBuilder = () => {
     const [totalTroops, setTotalTroops] = useState({
@@ -206,9 +176,35 @@ const SquadBuilder = () => {
             totalMarchSize += marchSizes[i];
         }
 
-        // *** Call the pure function to calculate adjusted ratios ***
-        const adjRatio = calculateAdjustedRatios(totalTroops, remainingTroops, desiredRatio, totalMarchSize);
-        setAdjustedRatios(adjRatio); // For display purposes
+        const adjRatio = {};
+         // Initialize adjRatio for all troop types
+        for (const type in totalTroops) {
+            adjRatio[type] = 0;
+        }
+        let remainingMarchCapacity = totalMarchSize;
+       //Create local copy for calculations.
+         let localRemainingTroops = {};
+        for (const type in remainingTroops) {
+            localRemainingTroops[type] = remainingTroops[type].reduce((sum, level) => sum + level.count, 0);
+        }
+
+        // *** CORRECTED ADJUSTED RATIO LOGIC ***
+        //sort troops
+        const allTroopTypes = Object.keys(totalTroops);
+        const sortedSequence = allTroopTypes.sort((typeA, typeB) => {
+            // Find the highest sequence number for each troop type
+            const highestSequenceA = remainingTroops[typeA].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
+            const highestSequenceB = remainingTroops[typeB].reduce((maxSeq, troop) => Math.max(maxSeq, troop.sequence), 0);
+            return highestSequenceB - highestSequenceA; // Sort in descending order
+        });
+        for (const troopType of sortedSequence) {
+            let desiredTroops = Math.floor(totalMarchSize * desiredRatio[troopType]);
+            let allocated = Math.min(desiredTroops, localRemainingTroops[troopType], remainingMarchCapacity);
+            adjRatio[troopType] = totalMarchSize > 0 ? allocated / totalMarchSize : 0; // Avoid division by zero.
+
+            remainingMarchCapacity -= allocated; //update remaining capacity
+            localRemainingTroops[troopType] -= allocated; //update local remaining troops.
+        }
 
 
         // --- 4. Build the User-Defined Squads ---
@@ -268,6 +264,10 @@ const SquadBuilder = () => {
             }
         }
         setAdditionalTroopsRequired(additionalRequired);
+
+        // --- 6. Update State (Correct Order) ---
+        setAdjustedRatios(adjRatio); // for display
+        setSquads(calculatedSquads);
     };
 
 
@@ -297,12 +297,7 @@ const SquadBuilder = () => {
             </div>
 
             <div className="results-section">
-                <h3>Adjusted Ratios</h3>
-                <p>
-                    Infantry: {adjustedRatios.infantry?.toFixed(2) || 0},&nbsp;
-                    Lancer: {adjustedRatios.lancer?.toFixed(2) || 0},&nbsp;
-                    Marksman: {adjustedRatios.marksman?.toFixed(2) || 0}
-                </p>
+                <AdjustedRatioDisplay adjustedRatios={adjustedRatios} desiredRatio={desiredRatio} />
                 {isRallyCaller && (
                     <RallyCallerCalculator
                         marchSize={marchSizes[0]}
