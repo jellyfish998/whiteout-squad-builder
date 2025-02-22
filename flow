@@ -1,4 +1,4 @@
-flowchart TD;
+/''flowchart TD;
   Start --> Step1["Step 1: User Inputs"]
   Step1 -->|Enter Total Troops per Type & Level| Step1a["Enter Total Troops per Type & Level"]
   Step1 -->|Set Desired Troop Ratios| Step1b["Set Desired Troop Ratios (Infantry, Lancer, Marksman)"]
@@ -34,4 +34,4 @@ flowchart TD;
   Step7 -->|Allow User to Download Squad Allocation as JSON| Step7a["Allow User to Download Squad Allocation as JSON"]
   Step7 -->|Compare JSON Output with Spreadsheet| Step7b["Compare JSON Output with Spreadsheet for Validation"]
 
-  Step7 --> End
+  Step7 --> End''/
