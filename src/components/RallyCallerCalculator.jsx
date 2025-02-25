@@ -1,70 +1,42 @@
 import React from 'react';
 
-const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops }) => {
+const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops, onRallyCallerAllocation }) => {
+    const allocateRallyCaller = () => {
+        let rallyCallerSquad = {};
+        let remainingTroops = JSON.parse(JSON.stringify(totalTroops));
 
-    const calculateRallyCallerSquad = () => {
-        if (!marchSize) {
-            return {infantry: 0, lancer: 0, marksman: 0, error: null};
+        for (const type in desiredRatio) {
+            rallyCallerSquad[type] = [];
+            let troopsToAllocate = Math.floor(marchSize * desiredRatio[type]);
+
+            remainingTroops[type].sort((a, b) => b.sequence - a.sequence || b.level - a.level);
+            for (const troop of remainingTroops[type]) {
+                if (troop.count <= 0) continue;
+                const used = Math.min(troopsToAllocate, troop.count);
+                if (used > 0) {
+                    rallyCallerSquad[type].push({ level: troop.level, count: used });
+                }
+                troopsToAllocate -= used;
+                troop.count -= used;
+                if (troopsToAllocate <= 0) break;
+            }
         }
 
-        const rallyCallerSquad = {};
-        const remainingTroops = JSON.parse(JSON.stringify(totalTroops)); // Deep copy
-
-        for (const type in remainingTroops) {
-             rallyCallerSquad[type] = 0; //init
-            let troopsToAllocate = Math.floor(marchSize * desiredRatio[type]);
-             // Sort troop levels by sequence (higher levels first, based on sequence object)
-            const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {  // Moved to here.
-                if (b.sequence !== a.sequence) {
-                    return b.sequence - a.sequence; // Highest sequence first
-                } else {
-                    return b.level - a.level;     // Highest level first
-                }
-            });
-
-              for (const levelData of sortedTroopLevels) {
-                const troopsToUse = Math.min(troopsToAllocate, levelData.count);
-                rallyCallerSquad[type] += troopsToUse;
-                troopsToAllocate -= troopsToUse;
-                levelData.count -= troopsToUse;
-                 if (troopsToAllocate <= 0) break; // Optimization, exit loop early
-             }
-              if(troopsToAllocate > 0) {
-                return {infantry: 0, lancer: 0, marksman: 0, error: `Not enough ${type} for rally caller`};
-              }
-         }
-        return { ...rallyCallerSquad, error: null };
+        onRallyCallerAllocation(rallyCallerSquad, remainingTroops);
+        return rallyCallerSquad;
     };
 
-
-    const { infantry, lancer, marksman, error } = calculateRallyCallerSquad();
-
+    const rallyCallerSquad = allocateRallyCaller();
 
     return (
         <div>
-            {error ? (
-                <p className="error">{error}</p>
-            ) : (
-                <>
-                  <h3>Rally Caller Squad</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Infantry</th>
-                      <th>Lancer</th>
-                      <th>Marksman</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                        <td>{infantry}</td>
-                        <td>{lancer}</td>
-                        <td>{marksman}</td>
-                    </tr>
-                  </tbody>
-                </table>
-                </>
-
+            <h3>Rally Caller Squad</h3>
+            {Object.keys(rallyCallerSquad).map(type =>
+                rallyCallerSquad[type].map((troop, index) => (
+                    <p key={`${type}-${index}`}>
+                        {type} - Level {troop.level}: {troop.count}
+                    </p>
+                ))
             )}
         </div>
     );
