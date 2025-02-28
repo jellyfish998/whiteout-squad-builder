@@ -1,70 +1,72 @@
-body {
-  font-family: sans-serif;
+/* Reset default margins and paddings */
+* {
   margin: 0;
-  padding: 20px;
-  background-color: #f0f0f0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Set up a clean, modern font */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
 }
 
-.App {
-width: 100%;
-max-width: 800px; /* Adjust as needed */
-
-}
-.squad-builder {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.input-section,
-.results-section {
-  margin-bottom: 20px;
-}
-
-table {
+/* Main container */
+#root {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
-
-input[type="number"] {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 80px; /* Adjust as needed */
-}
-
+/* Global button styling */
 button {
-  padding: 10px 15px;
   background-color: #007bff;
   color: white;
+  padding: 10px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
-  margin-top: 1rem;
+  font-size: 16px;
+  transition: background 0.3s ease-in-out;
 }
 
 button:hover {
   background-color: #0056b3;
 }
 
-h2, h3 {
+/* Global input styling */
+input, select {
+  width: 100%;
+  padding: 8px;
   margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
-h3 {
-  margin-top: 1em;
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  body {
+      padding: 10px;
+  }
+
+  button {
+      font-size: 14px;
+      padding: 8px;
+  }
 }

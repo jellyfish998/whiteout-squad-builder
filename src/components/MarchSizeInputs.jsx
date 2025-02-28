@@ -1,34 +1,42 @@
 import React from 'react';
 
-const MarchSizeInputs = ({ numSquads, marchSizes, onNumSquadsChange, onMarchSizeChange }) => {
-    // Ensure marchSizes is always an array to prevent crashes
-    if (!Array.isArray(marchSizes)) {
-        marchSizes = Array(numSquads).fill(135410);
-    }
+const MarchSizeInputs = ({ numSquads, marchSizes, isRallyCaller, onNumSquadsChange, onMarchSizeChange }) => {
+    const handleSizeChange = (index, value) => {
+        onMarchSizeChange(index, value);
+    };
+
+  const effectiveNumSquads = isRallyCaller ? numSquads + 1 : numSquads;
+
 
     return (
-        <div className="input-group">
+        <div className="march-size-inputs">
+            <div>
+                <label htmlFor="num-squads">Number of Squads (excluding Rally Caller):</label>
+                <input
+                    id="num-squads"
+                    type="number"
+                    value={numSquads}
+                    onChange={(e) => onNumSquadsChange(e.target.value)}
+                    min="1"
+                />
+            </div>
             <h3>March Sizes</h3>
-            <label>Number of Squads:</label>
-            <input
-                type="number"
-                value={numSquads}
-                min="1"
-                onChange={(e) => onNumSquadsChange(parseInt(e.target.value) || 1)}
-            />
-
-            <div className="march-size-list">
-                {marchSizes.map((size, index) => (
-                    <div key={index} className="march-size-item">
-                        <label>Squad {index + 1} March Size:</label>
+            <div className='march-sizes-container'>
+                 {Array.from({ length: effectiveNumSquads }).map((_, index) => {
+                   const label = isRallyCaller && index === 0 ? "Squad 1 (Rally Caller)" : `Squad ${index + (isRallyCaller? 0:1)}`;
+                    return(
+                        <div key={index}>
+                        <label htmlFor={`march-size-${index}`}>{label}:</label>
                         <input
                             type="number"
-                            value={size}
+                            id={`march-size-${index}`}
+                            value={marchSizes[index] !== undefined ? marchSizes[index] : ''}
+                            onChange={(e) => handleSizeChange(index, e.target.value)}
                             min="0"
-                            onChange={(e) => onMarchSizeChange(index, e.target.value)}
                         />
-                    </div>
-                ))}
+                        </div>
+                    );
+                 })}
             </div>
         </div>
     );

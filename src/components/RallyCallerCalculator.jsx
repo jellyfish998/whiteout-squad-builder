@@ -1,42 +1,73 @@
 import React from 'react';
 
-const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops, onRallyCallerAllocation }) => {
-    const allocateRallyCaller = () => {
-        let rallyCallerSquad = {};
-        let remainingTroops = JSON.parse(JSON.stringify(totalTroops));
+const RallyCallerCalculator = ({ marchSize, desiredRatio, totalTroops }) => {
 
-        for (const type in desiredRatio) {
-            rallyCallerSquad[type] = [];
-            let troopsToAllocate = Math.floor(marchSize * desiredRatio[type]);
-
-            remainingTroops[type].sort((a, b) => b.sequence - a.sequence || b.level - a.level);
-            for (const troop of remainingTroops[type]) {
-                if (troop.count <= 0) continue;
-                const used = Math.min(troopsToAllocate, troop.count);
-                if (used > 0) {
-                    rallyCallerSquad[type].push({ level: troop.level, count: used });
-                }
-                troopsToAllocate -= used;
-                troop.count -= used;
-                if (troopsToAllocate <= 0) break;
-            }
+    const calculateRallyCallerSquad = () => {
+        if (!marchSize) {
+            return { rallyCallerSquad: { infantry: [], lancer: [], marksman: [] }, error: null };
         }
 
-        onRallyCallerAllocation(rallyCallerSquad, remainingTroops);
-        return rallyCallerSquad;
+        const rallyCallerSquad = {};
+        const remainingTroops = JSON.parse(JSON.stringify(totalTroops)); // Deep copy
+
+        for (const type in remainingTroops) {
+            rallyCallerSquad[type] = []; //init
+            let troopsToAllocate = Math.floor(marchSize * desiredRatio[type]);
+            // Sort troop levels by sequence (higher levels first, based on sequence object)
+            const sortedTroopLevels = [...remainingTroops[type]].sort((a, b) => {
+                if (b.sequence !== a.sequence) {
+                    return b.sequence - a.sequence; // Highest sequence first
+                } else {
+                    return b.level - a.level;     // Highest level first
+                }
+            });
+
+            for (const levelData of sortedTroopLevels) {
+                const troopsToUse = Math.min(troopsToAllocate, levelData.count);
+                if (troopsToUse > 0) {
+                    rallyCallerSquad[type].push({ level: levelData.level, count: troopsToUse });
+                }
+                troopsToAllocate -= troopsToUse;
+                levelData.count -= troopsToUse;
+                if (troopsToAllocate <= 0) break; // Optimization, exit loop early
+            }
+            if (troopsToAllocate > 0) {
+                return { rallyCallerSquad: { infantry: [], lancer: [], marksman: [] }, error: `Not enough ${type} for rally caller` };
+            }
+        }
+        return { rallyCallerSquad, error: null };
     };
 
-    const rallyCallerSquad = allocateRallyCaller();
+    const { rallyCallerSquad, error } = calculateRallyCallerSquad();
 
     return (
         <div>
-            <h3>Rally Caller Squad</h3>
-            {Object.keys(rallyCallerSquad).map(type =>
-                rallyCallerSquad[type].map((troop, index) => (
-                    <p key={`${type}-${index}`}>
-                        {type} - Level {troop.level}: {troop.count}
-                    </p>
-                ))
+            {error ? (
+                <p className="error">{error}</p>
+            ) : (
+                <>
+                    <h3>Rally Caller Squad</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Troop Type</th>
+                                <th>Level</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {Object.keys(totalTroops).map((type) => (
+                                rallyCallerSquad[type]?.map((troopLevel, index) => (
+                                    <tr key={`${type}-${index}`}>
+                                        <td>{type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                                        <td>{troopLevel.level}</td>
+                                        <td>{troopLevel.count}</td>
+                                    </tr>
+                                ))
+                            ))}
+                        </tbody>
+                    </table>
+                </>
             )}
         </div>
     );

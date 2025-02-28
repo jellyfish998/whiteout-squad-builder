@@ -1,89 +1,67 @@
 import React from 'react';
 
 const TroopInputs = ({ totalTroops, onTroopChange }) => {
-    const handleAddTroopLevel = (type) => {
-        onTroopChange(type, [...totalTroops[type], { level: 1, count: 0, sequence: 1 }]);
+    const handleCountChange = (type, levelIndex, newCount) => {
+        const newTroops = { ...totalTroops };
+        newTroops[type] = newTroops[type].map((levelData, index) =>
+            index === levelIndex ? { ...levelData, count: Math.max(0, parseInt(newCount) || 0) } : levelData
+        );
+        onTroopChange(type, newTroops[type]);
     };
 
-    const handleRemoveTroopLevel = (type, index) => {
-        const newTroops = [...totalTroops[type]];
-        newTroops.splice(index, 1);
-        onTroopChange(type, newTroops);
+    const handleAddLevel = (type) => {
+        const newTroops = { ...totalTroops };
+        newTroops[type] = [...newTroops[type], { level: newTroops[type].length + 1, count: 0, sequence: 1 }];
+        onTroopChange(type, newTroops[type]);
+    };
+    const handleRemoveLevel = (type, levelIndex) => {
+        const newTroops = { ...totalTroops };
+        newTroops[type] = newTroops[type].filter((_, index) => index !== levelIndex);
+        onTroopChange(type, newTroops[type]);
     };
 
-    const handleTroopCountChange = (type, index, value) => {
-        const newTroops = [...totalTroops[type]];
-        newTroops[index] = { ...newTroops[index], count: parseInt(value) || 0 };
-        onTroopChange(type, newTroops);
-    };
-    const handleTroopLevelChange = (type, index, value) => {
-        const newTroops = [...totalTroops[type]];
-        newTroops[index] = { ...newTroops[index], level: parseInt(value) || 1 };
-        onTroopChange(type, newTroops);
+      const handleSequenceChange = (type, levelIndex, newSequence) => {
+        const newTroops = { ...totalTroops };
+        newTroops[type] = newTroops[type].map((levelData, index) =>
+          index === levelIndex ? { ...levelData, sequence: parseInt(newSequence) || 1 } : levelData
+        );
+        onTroopChange(type, newTroops[type]);
     };
 
-    const handleTroopSequenceChange = (type, index, value) => {
-        const newTroops = [...totalTroops[type]];
-        newTroops[index] = { ...newTroops[index], sequence: parseInt(value) || 1};
-        onTroopChange(type, newTroops);
-    };
 
     return (
-        <div>
-            <h3>Troop Inputs</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Troop Type</th>
-                        <th>Level</th>
-                        <th>Count</th>
-                        <th>Sequence</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {Object.keys(totalTroops).map((type) => (
-                        totalTroops[type].map((troopLevel, index) => (
-                            <tr key={`${type}-${index}`}>
-                                <td>{type.charAt(0).toUpperCase() + type.slice(1)}</td>
-                                 <td>
-                                    <input
-                                        type="number"
-                                        value={troopLevel.level}
-                                        onChange={(e) => handleTroopLevelChange(type, index, e.target.value)}
-                                        min="1"
-                                    />
-                                 </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        value={troopLevel.count}
-                                        onChange={(e) => handleTroopCountChange(type, index, e.target.value)}
-                                    />
-                                </td>
-                                  <td>
-                                    <input
-                                        type="number"
-                                         value={troopLevel.sequence}
-                                        onChange={(e) => handleTroopSequenceChange(type, index, e.target.value)}
-                                        min="1"
-                                     />
-                                 </td>
-                                <td>
-                                    <button onClick={() => handleRemoveTroopLevel(type, index)}>Remove</button>
-                                </td>
-                            </tr>
-                        ))
+        <div className="troop-inputs">
+            {Object.entries(totalTroops).map(([type, levels]) => (
+                <div key={type} className="troop-type">
+                    <h4>{type.charAt(0).toUpperCase() + type.slice(1)}</h4>
+                    {levels.map((levelData, index) => (
+                        <div key={index} className="troop-level">
+                            <label>
+                                Level {levelData.level}:
+                                <input
+                                    type="number"
+                                    value={levelData.count}
+                                    onChange={(e) => handleCountChange(type, index, e.target.value)}
+                                    min="0"
+                                />
+                            </label>
+                            <label>
+                                Sequence:
+                                <input
+                                  type="number"
+                                  value={levelData.sequence}
+                                  onChange={(e) => handleSequenceChange(type, index, e.target.value)}
+                                  min="1"
+                                />
+                            </label>
+                             <button type="button" onClick={() => handleRemoveLevel(type, index)}>
+                                Remove
+                            </button>
+                        </div>
                     ))}
-                    {Object.keys(totalTroops).map((type) => (
-                        <tr key={`add-${type}`}>
-                           <td colSpan="5">
-                                <button onClick={() => handleAddTroopLevel(type)}>Add {type.charAt(0).toUpperCase() + type.slice(1)} Level</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                    <button type="button" onClick={() => handleAddLevel(type)}>Add Level</button>
+                </div>
+            ))}
         </div>
     );
 };
